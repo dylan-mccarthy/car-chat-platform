@@ -1,0 +1,61 @@
+@page "/account"
+@using CarChat.Web.Services
+@inject UserSessionService UserSession
+@inject AuthenticationStateProvider AuthStateProvider
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+<PageTitle>Account — CarChat Platform</PageTitle>
+
+<div class="account-page">
+    <h1>Account</h1>
+
+    @if (_user is not null)
+    {
+        <div class="account-card">
+            <div class="account-row">
+                <span class="label">Display Name</span>
+                <span>@_user.DisplayName</span>
+            </div>
+            <div class="account-row">
+                <span class="label">Email</span>
+                <span>@_user.Email</span>
+            </div>
+            <div class="account-row">
+                <span class="label">Provider</span>
+                <span class="badge-provider">@_user.Provider</span>
+            </div>
+            <div class="account-row">
+                <span class="label">Member Since</span>
+                <span>@_user.CreatedAt.ToString("MMMM d, yyyy")</span>
+            </div>
+        </div>
+
+        <div class="account-actions">
+            <a href="/authentication/logout" class="btn btn-secondary">Sign Out</a>
+        </div>
+    }
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; } = null!;
+    private CarChat.Core.Models.User? _user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthState;
+        _user = await UserSession.GetOrCreateUserAsync(auth.User);
+    }
+}
+
+<style>
+    .account-page { max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+    .account-card { background: white; border-radius: 12px; padding: 1.5rem 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
+    .account-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #eee; }
+    .account-row:last-child { border-bottom: none; }
+    .label { font-weight: 600; color: #555; }
+    .badge-provider { background: #e9ecef; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.85rem; text-transform: capitalize; }
+    .account-actions { display: flex; gap: 0.75rem; }
+    .btn { padding: 0.5rem 1.25rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.95rem; font-weight: 500; text-decoration: none; display: inline-block; }
+    .btn-secondary { background: #6c757d; color: white; }
+</style>

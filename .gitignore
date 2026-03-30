@@ -1,0 +1,45 @@
+## .NET
+bin/
+obj/
+*.user
+.vs/
+.vscode/
+*.suo
+*.userprefs
+*.DotSettings
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!packages/repositories.config
+
+## Rider / JetBrains
+.idea/
+*.sln.iml
+
+## Databases (dev)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+## Secrets — NEVER commit
+appsettings.*.local.json
+*secrets*.json
+*.pfx
+*.key
+
+## OS
+.DS_Store
+Thumbs.db

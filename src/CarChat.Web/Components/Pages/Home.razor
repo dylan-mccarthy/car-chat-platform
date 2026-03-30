@@ -1,0 +1,44 @@
+﻿@page "/"
+
+<PageTitle>CarChat Platform</PageTitle>
+
+<div class="home-hero">
+    <h1>CarChat Platform</h1>
+    <p class="lead">Secure, real-time communication bridge between your agent service and Android app.</p>
+
+    <AuthorizeView>
+        <Authorized>
+            <a href="/dashboard" class="btn btn-primary btn-lg">Go to Dashboard</a>
+        </Authorized>
+        <NotAuthorized>
+            <a href="/login" class="btn btn-primary btn-lg">Get Started</a>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <div class="features">
+        <div class="feature-card">
+            <h3>&#128274; Secure by Default</h3>
+            <p>OAuth login for your app. Hashed API keys for your agent. JWT-authenticated WebSocket relay.</p>
+        </div>
+        <div class="feature-card">
+            <h3>&#9889; Real-Time Relay</h3>
+            <p>Bidirectional WebSocket bridge. Messages flow freely between your agent and app with zero storage.</p>
+        </div>
+        <div class="feature-card">
+            <h3>&#128273; API Key Management</h3>
+            <p>Create, name, and revoke API keys from this dashboard. Keys are shown once and stored securely.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .home-hero { max-width: 900px; margin: 4rem auto; text-align: center; padding: 0 1rem; }
+    .home-hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .lead { font-size: 1.2rem; color: #555; margin-bottom: 2rem; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 3rem; text-align: left; }
+    .feature-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .feature-card h3 { margin-top: 0; }
+    .btn { padding: 0.65rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-block; }
+    .btn-primary { background: #0d6efd; color: white; }
+    .btn-lg { padding: 0.85rem 2rem; font-size: 1.1rem; }
+</style>

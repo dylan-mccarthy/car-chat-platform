@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CarChat.Api/CarChat.Api.csproj" />
+    <Project Path="src/CarChat.Core/CarChat.Core.csproj" />
+    <Project Path="src/CarChat.Web/CarChat.Web.csproj" />
+  </Folder>
+</Solution>

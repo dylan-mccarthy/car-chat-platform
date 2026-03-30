@@ -1,0 +1,188 @@
+@page "/dashboard"
+@using CarChat.Core.Models
+@using CarChat.Core.Services
+@using CarChat.Web.Services
+@inject IApiKeyService ApiKeyService
+@inject UserSessionService UserSession
+@inject AuthenticationStateProvider AuthStateProvider
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard — CarChat Platform</PageTitle>
+
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>API Keys</h1>
+        <button class="btn btn-primary" @onclick="ShowCreateModal">+ New Key</button>
+    </div>
+
+    @if (_loading)
+    {
+        <p>Loading...</p>
+    }
+    else if (_keys.Count == 0)
+    {
+        <div class="empty-state">
+            <p>No API keys yet. Create one to connect your agent.</p>
+        </div>
+    }
+    else
+    {
+        <div class="keys-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Created</th>
+                        <th>Last Used</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var key in _keys)
+                    {
+                        <tr class="@(key.IsActive ? "" : "revoked")">
+                            <td>@key.Name</td>
+                            <td>@key.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@(key.LastUsedAt?.ToString("yyyy-MM-dd HH:mm") ?? "Never")</td>
+                            <td>
+                                <span class="badge @(key.IsActive ? "badge-active" : "badge-revoked")">
+                                    @(key.IsActive ? "Active" : "Revoked")
+                                </span>
+                            </td>
+                            <td>
+                                @if (key.IsActive)
+                                {
+                                    <button class="btn btn-danger btn-sm" @onclick="() => RevokeKey(key.Id)">
+                                        Revoke
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (_showCreateModal)
+{
+    <div class="modal-backdrop" @onclick="CloseModal">
+        <div class="modal" @onclick:stopPropagation>
+            <h2>Create API Key</h2>
+            <label>Key Name</label>
+            <input class="form-control" @bind="_newKeyName" placeholder="e.g. My Agent" />
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                <button class="btn btn-primary" @onclick="CreateKey" disabled="@string.IsNullOrWhiteSpace(_newKeyName)">
+                    Create
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_newRawKey is not null)
+{
+    <div class="modal-backdrop" @onclick="DismissRawKey">
+        <div class="modal modal-key" @onclick:stopPropagation>
+            <h2>&#10003; API Key Created</h2>
+            <p class="warning">Copy this key now — it will <strong>not</strong> be shown again.</p>
+            <div class="key-display">
+                <code>@_newRawKey</code>
+                <button class="btn btn-sm btn-secondary" @onclick="CopyKey">Copy</button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" @onclick="DismissRawKey">I've copied it</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; } = null!;
+
+    private List<ApiKey> _keys = [];
+    private bool _loading = true;
+    private bool _showCreateModal;
+    private string _newKeyName = string.Empty;
+    private string? _newRawKey;
+    private string? _userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthState;
+        var user = await UserSession.GetOrCreateUserAsync(auth.User);
+        _userId = user.Id;
+        await LoadKeys();
+    }
+
+    private async Task LoadKeys()
+    {
+        _loading = true;
+        _keys = (await ApiKeyService.ListKeysAsync(_userId!)).ToList();
+        _loading = false;
+    }
+
+    private void ShowCreateModal()
+    {
+        _newKeyName = string.Empty;
+        _showCreateModal = true;
+    }
+
+    private void CloseModal() => _showCreateModal = false;
+
+    private async Task CreateKey()
+    {
+        if (string.IsNullOrWhiteSpace(_newKeyName)) return;
+        var (rawKey, _) = await ApiKeyService.CreateKeyAsync(_userId!, _newKeyName.Trim());
+        _showCreateModal = false;
+        _newRawKey = rawKey;
+        await LoadKeys();
+    }
+
+    private async Task RevokeKey(string keyId)
+    {
+        await ApiKeyService.RevokeKeyAsync(keyId, _userId!);
+        await LoadKeys();
+    }
+
+    private void DismissRawKey() => _newRawKey = null;
+
+    private async Task CopyKey()
+    {
+        // JS interop for clipboard would be added here; for now just a placeholder
+        await Task.CompletedTask;
+    }
+}
+
+<style>
+    .dashboard { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .keys-table table { width: 100%; border-collapse: collapse; }
+    .keys-table th, .keys-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #eee; text-align: left; }
+    .keys-table th { background: #f8f9fa; font-weight: 600; }
+    .keys-table tr.revoked { opacity: 0.55; }
+    .badge { padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+    .badge-active { background: #d4edda; color: #155724; }
+    .badge-revoked { background: #f8d7da; color: #721c24; }
+    .empty-state { text-align: center; padding: 3rem; color: #888; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .modal { background: white; border-radius: 12px; padding: 2rem; min-width: 400px; max-width: 600px; }
+    .modal-key { max-width: 650px; }
+    .modal h2 { margin-top: 0; }
+    .modal label { display: block; margin-bottom: 0.4rem; font-weight: 500; }
+    .form-control { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; margin-bottom: 1rem; box-sizing: border-box; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; }
+    .warning { color: #856404; background: #fff3cd; padding: 0.5rem 0.75rem; border-radius: 6px; }
+    .key-display { display: flex; align-items: center; gap: 0.5rem; background: #f8f9fa; border-radius: 6px; padding: 0.75rem; margin: 1rem 0; overflow-x: auto; }
+    .key-display code { flex: 1; font-family: monospace; word-break: break-all; }
+    .btn { padding: 0.5rem 1.25rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.95rem; font-weight: 500; text-decoration: none; }
+    .btn-primary { background: #0d6efd; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.85rem; }
+    .btn:disabled { opacity: 0.55; cursor: default; }
+</style>
