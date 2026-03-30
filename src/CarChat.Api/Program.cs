@@ -4,6 +4,7 @@ using CarChat.Api.WebSockets;
 using CarChat.Core.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,11 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference(opts =>
+    {
+        opts.Title = "CarChat API";
+        opts.Theme = ScalarTheme.DeepSpace;
+    });
 }
 
 app.UseWebSockets(new WebSocketOptions

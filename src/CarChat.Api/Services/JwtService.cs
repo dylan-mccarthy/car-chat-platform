@@ -39,7 +39,12 @@ public class JwtService(IConfiguration configuration) : IJwtService
     public string? ValidateTokenAndGetUserId(string token)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
-        var handler = new JwtSecurityTokenHandler();
+        // Clear the default claim type mapping so JWT claim names are preserved as-is
+        // (by default, JwtSecurityTokenHandler maps "sub" → ClaimTypes.NameIdentifier)
+        var handler = new JwtSecurityTokenHandler
+        {
+            InboundClaimTypeMap = new Dictionary<string, string>()
+        };
 
         try
         {
